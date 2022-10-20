@@ -1,0 +1,131 @@
+---
+title: "SRER Litter Bags"
+author: "Taylor A Portman"
+date: "2022-09-28"
+output: html_document
+---
+
+## SRER litter bags T3: Mass loss
+
+Grass:   
+D= DICA, Digitaria californica  
+E= ERLE, Eragrostis lehmanniana (Invasive)   
+
+Plot:   
+IO= Invasive Open (ERLE dominant)  
+IC= Invasive Canopy (ERLE dominant)  
+NO= Native Open (DICA dominant)  
+NC= Native Canopy (DICA dominant)  
+
+Mass Loss= Mass Initial - Mass Final  
+
+
+```{r, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+setwd("/Volumes/GoogleDrive/My Drive/projects/ERLE_fungal_symbionts/R")
+```
+
+```{r, include=FALSE}
+#Import data
+T3MassLoss<-read.csv("data/T3LitterBags.csv")
+
+T3MassLoss$ID<-T3MassLoss$LitterbagCode
+T3MassLoss$MesquiteNum<-as.character(T3MassLoss$Mesquite.)
+
+T3dat<- T3MassLoss%>%
+ dplyr:: select(ID, Grass, Plot, MesquiteNum, MassLoss)%>%
+  na.omit()
+```
+
+
+### Data quality checking: 
+
+1. Compare mass loss between grass type, DICA and ERLE 
+2. Compare mass loss between the three collection sites (MesquiteNum) 
+
+Takeaways:  
+1. No difference in overall mass loss between plant type 
+2. Mesquite #1 and #2 are similar with a slight decrease in overall mass loss for mesquite #3 
+```{r}
+#1. Compare between plant type and look at overall spread of data
+ggplot(T3dat)+
+  geom_boxplot(aes(Grass, MassLoss))+
+  geom_point(aes(Grass, MassLoss))
+
+#2. Compare between plot and plant type
+ggplot(T3dat, aes(MesquiteNum, MassLoss, fill=Grass))+
+  geom_boxplot()
+```
+
+### Look at overall trends in mass loss between site and grass type
+
+Takeaways: 
+Treatments of interest are IC (invasive canopy), and NC (native canopy)   
+IC: DICA > ERLE   
+NC: ERLE > DICA   
+```{r}
+#Compare between treatment and grass
+ggplot(T3dat,aes(Plot, MassLoss, fill= Grass))+
+  geom_boxplot()
+  #geom_point(aes(color=Grass))
+
+#Look at all data seperated  by mesquite#
+ggplot(T3dat,aes(Plot, MassLoss, color= Grass))+
+  geom_point()+
+  facet_wrap(~MesquiteNum)
+```
+
+### Quick look at IC and NC for statistical significance : t.test
+
+Takeaway: 
+Neither plot treatment causes significant differences in mass loss between grass species  
+IC: p=0.2751  
+NC: p=0.1081
+```{r}
+# IC: invasive canopy
+T3.IC<- T3dat%>%
+  dplyr::filter(Plot=="IC")
+
+t.test(MassLoss~Grass, data=T3.IC)
+#not sig
+
+# NC: native canopy
+T3.NC<- T3dat%>%
+  dplyr::filter(Plot=="NC")
+
+t.test(MassLoss~Grass, data=T3.NC)
+#not sig
+
+
+```
+
+
+### ANOVA: looking at Mass loss as a function of Plot*Grass type 
+
+Takeaway: 
+Interaction effect of plot and grass type on Mass loss is marginally significant (p=0.0585)
+
+```{r}
+plot<-aov(MassLoss~ Plot*Grass, data=T3dat)
+summary(plot)
+```
+
+### ANOVA: looking at Mass Loss as a function of plot, looking at each grass separately 
+
+Takeaway: No plot treatment effect when filtering by grass species 
+ERLE: p=0.11
+DICA: p=0.276
+```{r}
+T3.ERLE<- T3dat %>%
+  dplyr::filter(Grass== "E")
+T3.DICA<- T3dat %>%
+  dplyr::filter(Grass== "D")
+
+plot.grass.ERLE<- aov(MassLoss~ Plot, data=T3.ERLE)
+summary(plot.grass.ERLE)
+
+plot.grass.DICA<- aov(MassLoss~ Plot, data=T3.DICA)
+summary(plot.grass.DICA)
+```
+

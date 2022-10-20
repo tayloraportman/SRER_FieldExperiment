@@ -1,0 +1,406 @@
+---
+title: "Monsoon Endophytes"
+author: "Taylor A Portman"
+date: "2022-10-06"
+output: html_document
+---
+```{r, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(RColorBrewer)
+library(ggpubr)
+library(cowplot)
+library(vegan)
+setwd("/Volumes/GoogleDrive/My Drive/projects/ERLE_fungal_symbionts/R")
+```
+
+Morphotype data of root endophyte cultures collected from the SRER  
+2 Plot types:  
+OPN: Open inter-canopy region  
+CAN: Under mesquite canopy  
+
+2 grass types:
+PlantOrigin:  
+ERLE: Lehmann lovegrass (invasive)  
+DICA: Arizona cottontop (native)
+
+Morphotypes are split into thre taxa 'types'  
+Bacteria   
+Fungi  and   
+Other- which includes sub-cultures that did not grow or contanined multiple taxa or taxa types.
+
+```{r, include=FALSE}
+#Import data
+getwd()
+morphotypes<-read.csv("/Volumes/GoogleDrive/My Drive/projects/MastersThesis/R/data/MonsoonCultureMorphotypes.csv")
+
+```
+
+
+## Abundance of morphotypes and isolation frequency
+```{r}
+count.morph<- morphotypes%>%
+  na.omit()%>%
+  count(Morphotype, PlantOrigin, Plot,Type)
+
+show(count.morph)
+
+isolation.freq.all<- morphotypes%>%
+  na.omit()%>%
+  count(PlantOrigin, Plot, MesquiteNum, CulturePlate, Type)
+
+isolation.freq<- morphotypes%>%
+  na.omit()%>%
+  count(PlantOrigin, Plot, Type)
+
+show(isolation.freq)
+
+ggplot(isolation.freq.all, aes(PlantOrigin, n, color=Type))+
+  geom_point(position= position_dodge(width=0.75))+
+  geom_boxplot()+
+  facet_wrap(~Plot)+
+  theme_bw()+
+  labs(title="Isolation frequency of 10 root segments per plot", x= "Plant Species", y= "Count", color= "Taxa")
+  
+```
+
+
+Overall, bacteria were more abundant than Fungi. 
+```{r}
+morph<- morphotypes%>%
+  na.omit()
+
+isolation.frequency<-morphotypes%>%
+  count(Type )
+
+ggplot(morph,aes(Plot, fill=Type))+
+  geom_bar(position="fill")+
+  theme_classic()
+
+bac<-filter(morph, Type== "Bacteria")
+fungi<-filter(morph, Type== "Fungi")
+
+bac.count<-bac%>%
+  filter(PlantOrigin=="DICA", Plot=="CAN")%>%
+  count(Morphotype, PlantOrigin, Plot, IsolateID)
+
+  
+#More bacteria in open plots than canopy plots
+```
+
+DICA had higher content of bacteria than fungi, this was especially pronounced in DICA collected from Open plots. 
+```{r}
+ggplot(morph,aes(PlantOrigin, fill=Type))+
+  geom_bar(position="fill")+
+  theme_classic()
+#DICA- more bacteria, ERLE more fungi
+
+
+ggplot(morph,aes(PlantOrigin, fill=Type))+
+  geom_bar(position="fill")+
+  facet_wrap(~Plot)+
+  theme_classic()
+
+count.origin.plot<- morph%>%
+  count(Type, PlantOrigin, Plot)
+origin.plot.mod<- lm(n~Type + PlantOrigin+ Plot, data= count.origin.plot)
+anova(origin.plot.mod)
+
+#Type is sig when accounting for Plant Origin and Plot (DICA Open much higher Bacteria)
+
+```
+## Community composition by morphotype
+
+```{r}
+fungi.count<- fungi%>%
+  count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(morph= case_when(n<=1 ~ "Uniques", n>1 ~ Morphotype))%>%
+  select(Morphotype, morph)
+
+fungi.all<- left_join(fungi, fungi.count, by= "Morphotype")
+
+bac.count<- bac%>%
+  count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(morph= case_when(n<=1 ~ "Uniques", n>1 ~ Morphotype))%>%
+  select(Morphotype, morph)
+
+bac.all<- left_join(bac, bac.count, by= "Morphotype")
+```
+
+
+```{r}
+cols<-27
+my.colors1<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
+
+ggplot(fungi,aes(PlantOrigin, fill=Morphotype))+
+  geom_bar(position="fill")+
+  facet_wrap(~Plot)+
+  scale_fill_manual(values= my.colors1)+
+  theme_classic()+
+  labs(title= "Fungi")
+
+cols<-16
+my.colors<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
+
+ggplot(fungi.all ,aes(PlantOrigin, fill=morph))+
+  geom_bar(position="fill")+
+  facet_wrap(~Plot)+
+  scale_fill_manual(values= my.colors)+
+  theme_classic()
+
+cols<-45
+my.colors2<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
+
+ggplot(bac,aes(PlantOrigin, fill=Morphotype))+
+  geom_bar(position=)+
+  facet_wrap(~Plot)+
+  scale_fill_manual(values= my.colors2)+
+  theme_classic()+
+  labs(title="Bacteria")
+
+cols<-22
+my.colors3<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
+
+ggplot(bac.all,aes(PlantOrigin, fill=morph))+
+  geom_bar(position="fill")+
+  facet_wrap(~Plot)+
+  scale_fill_manual(values= my.colors3)+
+  theme_classic()+
+  labs(title="Bacteria")
+
+```
+
+## Diversity, Richness, Evenness
+
+Shannon diversity: DICA: ERLE
+```{r}
+pop = fungi.all%>%
+  count(Morphotype, PlantOrigin)%>%
+ pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(-PlantOrigin)
+
+env = fungi.all%>%
+  count(Morphotype, PlantOrigin)%>%
+  pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(PlantOrigin)
+  
+
+H<- diversity(pop)
+richness<-specnumber(pop)
+evenness<-H/log(richness)
+
+alpha<-cbind(shannon=H, richness= richness, pielou=evenness, env)
+head(alpha)
+
+```
+`
+
+
+Shannon Diversity ALL MICROBES
+```{r}
+pop = morph%>%
+  count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  select(-PlantOrigin, -Plot)%>%
+ pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(-PlantPlot)
+
+env = fungi.all%>%
+    count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(PlantOrigin, Plot, PlantPlot)
+  
+
+H<- diversity(pop)
+richness<-specnumber(pop)
+evenness<-H/log(richness)
+
+alpha<-cbind(shannon=H, richness= richness, pielou=evenness, env)
+head(alpha)
+```
+
+```{r}
+plot.shan <- ggplot(alpha, aes(x = PlantPlot, y = shannon, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Shannon's H'") + 
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.rich <-ggplot(alpha, aes(x = PlantPlot, y = richness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Species Richness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.even <- ggplot(alpha, aes(x = PlantPlot, y = evenness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Pielou's Evenness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+legend <- get_legend(plot.even)
+
+plot_grid(plot.shan + theme(legend.position = "none"), plot.rich + theme(legend.position = "none"), plot.even + theme(legend.position = "none"),ncol = 3)
+
+## ADD CHEM DATA??!!
+
+```
+
+Shannon Diversity FUNGI ONLY
+```{r}
+pop = fungi.all%>%
+  count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  select(-PlantOrigin, -Plot)%>%
+ pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(-PlantPlot)
+
+env = fungi.all%>%
+    count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(PlantOrigin, Plot, PlantPlot)
+  
+
+H<- diversity(pop)
+richness<-specnumber(pop)
+evenness<-H/log(richness)
+
+alpha<-cbind(shannon=H, richness= richness, pielou=evenness, env)
+head(alpha)
+```
+
+```{r}
+plot.shan <- ggplot(alpha, aes(x = PlantPlot, y = shannon, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Shannon's H'") + 
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.rich <-ggplot(alpha, aes(x = PlantPlot, y = richness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Species Richness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.even <- ggplot(alpha, aes(x = PlantPlot, y = evenness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Pielou's Evenness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+legend <- get_legend(plot.even)
+
+plot_grid(plot.shan + theme(legend.position = "none"), plot.rich + theme(legend.position = "none"), plot.even + theme(legend.position = "none"),ncol = 3)
+
+## ADD CHEM DATA??!!
+
+```
+
+
+Shannon Diversity BACTERIA ONLY
+```{r}
+
+pop = morph%>%
+  filter(Type=="Bacteria")%>%
+  count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  select(-PlantOrigin, -Plot)%>%
+ pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(-PlantPlot)
+
+env = fungi.all%>%
+    count(Morphotype, PlantOrigin, Plot)%>%
+  mutate(PlantPlot= paste0(PlantOrigin , "_" , Plot))%>%
+  pivot_wider(names_from="Morphotype", values_from = "n", values_fill =0)%>%
+  select(PlantOrigin, Plot, PlantPlot)
+  
+
+H<- diversity(pop)
+richness<-specnumber(pop)
+evenness<-H/log(richness)
+
+alpha<-cbind(shannon=H, richness= richness, pielou=evenness, env)
+head(alpha)
+
+```
+
+```{r}
+
+plot.shan <- ggplot(alpha, aes(x = PlantPlot, y = shannon, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Shannon's H'") + 
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.rich <-ggplot(alpha, aes(x = PlantPlot, y = richness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Species Richness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+plot.even <- ggplot(alpha, aes(x = PlantPlot, y = evenness, colour = PlantPlot)) +
+  geom_point(size = 3) +
+  scale_colour_viridis_d(option = "magma", begin = 0.2, end = 0.8) +
+  ylab("Pielou's Evenness") +
+  xlab("") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4))
+
+legend <- get_legend(plot.even)
+
+plot_grid(plot.shan + theme(legend.position = "none"), plot.rich + theme(legend.position = "none"), plot.even + theme(legend.position = "none"),ncol = 3)
+
+## ADD CHEM DATA??!!
+
+```
+
+```{r}
+
+library(VennDiagram)
+
+fungi.venn<-fungi%>%
+  select(PlantOrigin, Morphotype)
+
+venn.diagram(
+  x=list(
+    fungi.venn%>% filter(PlantOrigin=="DICA")%>% select(Morphotype)%>% unlist(),
+    fungi.venn%>% filter(PlantOrigin=="ERLE")%>% select(Morphotype)%>% unlist()),
+  category.names=c("DICA", "ERLE"),
+  filename= "Venn.Fungi.png",
+  output=TRUE
+  )
+
+
+all.venn<-morphotypes%>%
+  select(PlantOrigin, Morphotype, Type, Plot)
+
+venn.diagram(
+  x=list(
+   all.venn%>% filter(PlantOrigin=="DICA")%>% select(Morphotype)%>% unlist(),
+   all.venn%>% filter(PlantOrigin=="ERLE")%>% select(Morphotype)%>% unlist()),
+  category.names=c("DICA", "ERLE"),
+  filename= "Venn.All.png",
+  output=TRUE
+  )
+
+```
+
+

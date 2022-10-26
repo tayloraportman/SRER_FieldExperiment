@@ -1,14 +1,4 @@
 .Rhistory
 .Rproj.user
-ERLE_fungal_symbionts.Rproj
-LCMS-FungalIsolates
-CaffeicAcidGermination/.Rproj.user
-ERLE_EndophyteGermination/.Rproj.user
-MassLossExperiment/.Rproj.user
-CaffeicAcidGermination/.Rhistory
-ERLE_EndophyteGermination/.Rhistory
-MassLossExperiment/.Rhistory
-CaffeicAcidGermination/CaffeicAcidGermination.Rmd
-ERLE_EndophyteGermination/Germination.R
-MassLossExperiment/Mass.Loss.R
-MassLossExperiment/MassLoss.html
+.gitignore
+SRER_FieldExperiment.Rproj

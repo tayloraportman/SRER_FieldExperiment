@@ -25,24 +25,26 @@ cols<-27
 my.colors1<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
 
 fig1<-ggplot(fungi,aes(PlantOrigin, fill=Morphotype))+
-  geom_bar(position="fill")+
+  geom_bar()+
   facet_wrap(~Plot)+
   scale_fill_manual(values= my.colors1)+
   theme_classic()+
-  labs(title= "Fungi")
+  labs(title= "Fungi", x= "Plant Host", y="n")
+fig1
 #Save to figures folder
 fileName = paste(figures, 'StackedBar_MonsoonFungi.png',sep = '/')
 ggsave(fileName, fig1, dpi = 800,width= 18, height=12, units=c('cm'))
 
 
-cols<-16
+cols<-21
 my.colors<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
 
-ggplot(fungi ,aes(PlantOrigin, fill=morph))+
+fig2<-ggplot(fungi ,aes(PlantOrigin, fill=morph))+
   geom_bar(position="fill")+
   facet_wrap(~Plot)+
   scale_fill_manual(values= my.colors)+
   theme_classic()
+fig2
 #Save to figures folder
 fileName = paste(figures, 'StackedBar_MonsoonFungi_combUniques.png',sep = '/')
 ggsave(fileName, fig2, dpi = 800,width= 18, height=12, units=c('cm'))
@@ -56,12 +58,13 @@ fig1<-ggplot(bac,aes(PlantOrigin, fill=Morphotype))+
   facet_wrap(~Plot)+
   scale_fill_manual(values= my.colors2)+
   theme_classic()+
-  labs(title="Bacteria")
+  labs(title="Bacteria", x= "Plant Host", y= "n")
+fig1
 #Save to figures folder
 fileName = paste(figures, 'StackedBar_MonsoonBacteria.png',sep = '/')
 ggsave(fileName, fig1, dpi = 800,width= 18, height=12, units=c('cm'))
 
-cols<-22
+cols<-27
 my.colors3<- colorRampPalette(brewer.pal(12, "Paired"))(cols)
 
 fig2<-ggplot(bac,aes(PlantOrigin, fill=morph))+
@@ -70,6 +73,7 @@ fig2<-ggplot(bac,aes(PlantOrigin, fill=morph))+
   scale_fill_manual(values= my.colors3)+
   theme_classic()+
   labs(title="Bacteria")
+fig2
 #Save to figures folder
 fileName = paste(figures, 'StackedBar_MonsoonBacteria_combUniques.png',sep = '/')
 ggsave(fileName, fig2, dpi = 800,width= 18, height=12, units=c('cm'))

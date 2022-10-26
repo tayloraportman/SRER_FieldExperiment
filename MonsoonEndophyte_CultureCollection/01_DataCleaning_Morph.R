@@ -27,17 +27,20 @@ bac<-filter(morphotypes, Type== "Bacteria")
 fungi<-filter(morphotypes, Type== "Fungi")
 
 fungi.count<- fungi%>%
-  count(Morphotype, PlantOrigin, Plot)%>%
+  count(Morphotype)%>%
   mutate(morph= case_when(n<=1 ~ "Uniques", n>1 ~ Morphotype))%>%
   select(Morphotype, morph)
 
-fungi.all<- left_join(fungi, fungi.count, by= "Morphotype")
+fungi.all<- fungi%>%
+  left_join(fungi.count, by= "Morphotype")%>% 
+  distinct
+
 # Export to data_clean ----------------------------------------------------
 fileName = paste(data_clean, 'FungalMorph_Clean.csv',sep = '/')
 write.csv(fungi.all, fileName )
 
 bac.count<- bac%>%
-  count(Morphotype, PlantOrigin, Plot)%>%
+  count(Morphotype)%>%
   mutate(morph= case_when(n<=1 ~ "Uniques", n>1 ~ Morphotype))%>%
   select(Morphotype, morph)
 

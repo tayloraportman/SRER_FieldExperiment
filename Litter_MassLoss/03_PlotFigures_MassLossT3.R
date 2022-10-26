@@ -9,7 +9,8 @@
 
 #Read in libraries
 library(ggplot2)
-
+library(dplyr)
+library(ggpubr)
 
 #Set working directory
 setwd("/Volumes/GoogleDrive/My Drive/projects/MastersThesis/R/SRER_FieldExperiment")
@@ -27,9 +28,10 @@ fig1<-dat%>%
   geom_boxplot(aes(fill=LitterType), alpha=0.7)+
   facet_wrap(~PatchType)+
   scale_shape_manual(values=c(19,1))+
-  scale_fill_manual(values=c("darkolivegreen", "darkgoldenrod1"))+
+  scale_fill_manual(values=c("dodgerblue3", "darkgoldenrod1"))+
   theme_bw()
-
+  
+fig1
 #Save to figures folder
 fileName = paste(figures, 'MassLossT3.png',sep = '/')
 ggsave(fileName, fig1, dpi = 800,width= 18, height=12, units=c('cm'))

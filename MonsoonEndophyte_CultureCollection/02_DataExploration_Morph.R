@@ -19,13 +19,16 @@ figures= 'MonsoonEndophyte_CultureCollection/figures'
 
 # Data Exploration --------------------------------------------------------
 morphotypes<-dat%>%
+  filter(Type!="Other")%>%
   na.omit()
 
 count.morph<- morphotypes%>%
   count(Morphotype, PlantOrigin, Plot,Type)
 
 isolation.freq.all<- morphotypes%>%
-  count(PlantOrigin, Plot, MesquiteNum, CulturePlate, Type)
+  filter(Type!="Other")%>%
+  count(PlantOrigin, Plot, MesquiteNum, CulturePlate, Type)%>%
+  
 
 isolation.freq<- morphotypes%>%
   count(PlantOrigin, Plot, Type)
@@ -38,14 +41,20 @@ fig1<-ggplot(isolation.freq.all, aes(PlantOrigin, n, color=Type))+
   labs(title="Average isolation frequency of 10 root segments per plot", 
        x= "Plant Species", y= "Count", 
        color= "Taxa")
+fig1
 #Save to figures folder
 fileName = paste(figures, 'IsolationFrequency_byType.png',sep = '/')
 ggsave(fileName, fig1, dpi = 800,width= 18, height=12, units=c('cm'))
 
-ggplot(morphotypes,aes(Plot, fill=Type))+
+fig2<-ggplot(morphotypes,aes(PlantOrigin, fill=Type))+
   geom_bar(position="fill")+
-  facet_wrap(~PlantOrigin)+
-  theme_classic()
+  facet_wrap(~Plot)+
+  theme_classic()+
+  labs(y="% Abundance", x= "Plant Host")
+fig2
+fileName = paste(figures, 'Abundance_byType.png',sep = '/')
+ggsave(fileName, fig2, dpi = 800,width= 18, height=12, units=c('cm'))
+
 #More bacteria in open plots than canopy plots for DICA
 
 

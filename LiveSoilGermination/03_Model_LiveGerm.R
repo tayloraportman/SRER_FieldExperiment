@@ -16,20 +16,31 @@ setwd("/Volumes/GoogleDrive/My Drive/projects/MastersThesis/R/SRER_FieldExperime
 #Read in data
 germ.dat<-read.csv("data_clean/LiveGermDat_Clean.csv")
 
-# Model building ----------------------------------------------------------
+#Figure save file path
+figures= 'LiveSoilGermination/figures'
 
-model1<-lm(TotalSeeds~SoilType+ GrassType + PatchType + 
-             CanopyStatus, data=germ.dat)
+# Model building ----------------------------------------------------------
+#normalize data
+germ.norm<- germ.dat%>%
+  mutate(seed= log(1+TotalSeeds))
+
+hist(germ.dat$TotalSeeds)
+hist(germ.norm$seed)
+
+model1<-lm(seed~SoilType+ GrassType + PatchType + 
+             CanopyStatus, data=germ.norm)
 summary(model1)
 anova(model1)
-tab_model(model1)
+fileName = paste(figures, 'TabModel_SeedGerm.doc',sep = '/')
+tab_model(model1, file= fileName)
 
-model2<-lmer(TotalSeeds~SoilType+ GrassType + PatchType + 
-               CanopyStatus+ (1|MesquiteNum), data=germ.dat)
+
+model2<-lmer(seed~SoilType+ GrassType + PatchType + 
+               CanopyStatus+ (1|MesquiteNum), data=germ.norm)
 summary(model2)
 anova(model2)
 tab_model(model2)
 
-AICc(model1, model2)
+AIC(model1, model2)
 #Choose model 1 as best fit
 #Higher R2 and lower AICc

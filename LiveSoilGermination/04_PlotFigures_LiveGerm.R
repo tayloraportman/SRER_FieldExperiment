@@ -21,7 +21,7 @@ figures= 'LiveSoilGermination/figures'
 
 fig1<-dat%>%
   ggplot(aes(SoilType, TotalSeeds))+
-  geom_point(aes(shape=CanopyStatus))+
+  geom_jitter(aes(shape=CanopyStatus, group= SoilType),width = 0.1)+
   geom_boxplot(aes(fill=GrassType), alpha=0.7)+
   facet_wrap(~GrassType)+
   scale_shape_manual(values=c(19,1))+
@@ -34,6 +34,17 @@ fileName = paste(figures, 'LiveSoilGermbySoilType.png',sep = '/')
 ggsave(fileName, fig1, dpi = 800,width= 18, height=12, units=c('cm'))
 
 
+live<- dat%>%
+  filter(SoilType=="Live")
 
+fig2<-live%>%
+  ggplot(aes(PatchType, TotalSeeds))+
+  geom_jitter(aes(shape=CanopyStatus, group= PatchType), width=0.1)+
+  geom_boxplot(aes(fill=CanopyStatus) ,alpha=0.7)+
+  facet_wrap(~GrassType)+
+  scale_shape_manual(values=c(19,1))+
+  scale_fill_manual(values=c("darkolivegreen","black" ))+
+  theme_classic()
+fig2
 
 

@@ -57,7 +57,7 @@ ggplot(count)+
   scale_shape_manual(values=c(19,1))+
   theme_bw()
 
-mod<- lm(n~Morphotype + PlantOrigin+ Plot+ Plot*Morphotype, data= count)
+mod<- lm(n~Morphotype + PlantOrigin+ Plot, data= count)
 anova(mod)
 tab_model(mod)
 
@@ -76,6 +76,6 @@ ggplot(count)+
   scale_shape_manual(values=c(19,1))+
   theme_bw()
 
-mod<- lm(n~Morphotype + PlantOrigin+ Plot+ Plot*Morphotype, data= count)
+mod<- lm(n~Morphotype + PlantOrigin+ Plot, data= count)
 anova(mod)
 tab_model(mod)

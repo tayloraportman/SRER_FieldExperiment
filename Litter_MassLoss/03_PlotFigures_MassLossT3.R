@@ -26,10 +26,11 @@ fig1<-dat%>%
   ggplot(aes(LitterType, MassLoss))+
   geom_point(aes(shape=CanopyStatus))+
   geom_boxplot(aes(fill=LitterType), alpha=0.7)+
-  facet_wrap(~PatchType)+
+  facet_wrap(~PatchType, labeller = label_both)+
   scale_shape_manual(values=c(19,1))+
   scale_fill_manual(values=c("dodgerblue3", "darkgoldenrod1"))+
-  theme_bw()
+  labs(y= "Mass Loss (g)", shape= "Canopy Status")+
+  theme_classic()
   
 fig1
 #Save to figures folder

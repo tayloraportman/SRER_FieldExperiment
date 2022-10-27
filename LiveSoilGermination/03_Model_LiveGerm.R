@@ -9,6 +9,7 @@
 library(dplyr)
 library(lme4)
 library(sjPlot )
+library(car)
 
 #Set workind directory
 setwd("/Volumes/GoogleDrive/My Drive/projects/MastersThesis/R/SRER_FieldExperiment")
@@ -22,25 +23,40 @@ figures= 'LiveSoilGermination/figures'
 # Model building ----------------------------------------------------------
 #normalize data
 germ.norm<- germ.dat%>%
-  mutate(seed= log(1+TotalSeeds))
+  mutate(logit= logit((TotalSeeds/10), percent))
 
 hist(germ.dat$TotalSeeds)
-hist(germ.norm$seed)
+hist(germ.norm$logit)
 
-model1<-lm(seed~SoilType+ GrassType + PatchType + 
-             CanopyStatus, data=germ.norm)
-summary(model1)
-anova(model1)
-fileName = paste(figures, 'TabModel_SeedGerm.doc',sep = '/')
-tab_model(model1, file= fileName)
+# BOCU --------------------------------------------------------------------
+germBOCU<-germ.norm%>%
+  filter(Grass=="BOCU")
+modelBOCU<-lm(logit~ SoilType+ PatchType + CanopyStatus, 
+           data=germBOCU)
 
+anova(modelBOCU)
+tab_model(modelBOCU)
+fileName = paste(figures, 'TabModel_BOCU.doc',sep = '/')
+tab_model(modelBOCU, file= fileName)
 
-model2<-lmer(seed~SoilType+ GrassType + PatchType + 
-               CanopyStatus+ (1|MesquiteNum), data=germ.norm)
-summary(model2)
-anova(model2)
-tab_model(model2)
+# ERIN --------------------------------------------------------------------
+germERIN<-germ.norm%>%
+  filter(Grass=="ERIN")
+modelERIN<-lm(logit~ SoilType+ PatchType + CanopyStatus, 
+              data=germERIN)
 
-AIC(model1, model2)
-#Choose model 1 as best fit
-#Higher R2 and lower AICc
+anova(modelERIN)
+tab_model(modelERIN)
+fileName = paste(figures, 'TabModel_ERIN.doc',sep = '/')
+tab_model(modelERIN, file= fileName)
+# ERLE --------------------------------------------------------------------
+germERLE<-germ.norm%>%
+  filter(Grass=="ERLE")
+modelERLE<-lm(logit~ SoilType+ PatchType + CanopyStatus, 
+              data=germERLE)
+
+anova(modelERLE)
+tab_model(modelERLE)
+fileName = paste(figures, 'TabModel_ERLE.doc',sep = '/')
+tab_model(modelERLE, file= fileName)
+#########

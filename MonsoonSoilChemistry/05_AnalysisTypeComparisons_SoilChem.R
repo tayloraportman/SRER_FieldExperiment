@@ -39,10 +39,10 @@ compare_means(values ~ CanopyStatus, data = sig.analysis1,
 colors= c("Invasive"= "goldenrod2", "Native"= "dodgerblue")
 shapes= c("Mesquite"= 19, "Open"=1)
 p <- ggboxplot(sig.analysis1, x = "CanopyStatus", y = "values",
-               color = "PatchType", palette = colors,
+               color = "PatchType", fill= "PatchType", palette = colors,
                add = "jitter", shape= "CanopyStatus",
-               facet.by = "AnalysisType", scales= "free",
-               short.panel.labs = FALSE)+
+               facet.by = "AnalysisType", scales= "free", alpha=0.7,
+               short.panel.labs = TRUE)+
   labs(y="ppm")
 # Use only p.format as label. Remove method name.
 p<-p + stat_compare_means(label = "p.signif" ,label.x.npc= 0.5, label.y.npc = .9)+ 
@@ -61,14 +61,14 @@ compare_means(values ~ SoilType, data = sig.analysis2,
 colors= c("Live"= "coral", "Sterile"= "black")
 shapes= c("Mesquite"= 19, "Open"=1)
 p <- ggboxplot(sig.analysis2, x = "SoilType", y = "values",
-               color = "SoilType", palette = colors,
-               add = "jitter", shape= "CanopyStatus",
-               facet.by = "AnalysisType", scales= "free",
-               short.panel.labs = FALSE)
+               color = "SoilType", fill="SoilType" ,palette = colors,
+               add = "jitter", 
+               facet.by = "AnalysisType", scales= "free", alpha=0.7,
+               short.panel.labs = TRUE)
 # Use only p.format as label. Remove method name.
 p<-p + stat_compare_means(label = "p.signif" ,label.x.npc= 0.5, label.y.npc = .9)+ 
   theme_classic()+
-  stat_compare_means(label="p.format", label.x.npc= .70, label.y.npc=0.99)+
+  stat_compare_means(label="p.format", label.x.npc= .70, label.y.npc=1)+
   scale_shape_manual(values=shapes)
 p
 fileName = paste(figures, 'Boxplot_SigChemAnalysis_SoilType.png',sep = '/')

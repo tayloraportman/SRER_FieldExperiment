@@ -1,6 +1,6 @@
 #Monsoon Soil Endophytes
 
-#AnalysisType Comparisons
+#Analysis Type Comparisons
 #Taylor Portman
 #21OCT22
 

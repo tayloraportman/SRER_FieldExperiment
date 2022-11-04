@@ -73,9 +73,15 @@ elements<-elements%>%
 shapes<-c("Mesquite"=19, "Open"=1)
 colors<-c("Invasive"="goldenrod2", "Native"="dodgerblue")
 
+plot(plot_CCA, type="n", las=1)
+text(chem_pca, display = "sites", 
+     labels=row.names(chem_s))
+ordihull(plot_CCA, CanopyStatus, display="sites", label=T,
+         lwd=2, col=c("blue","black"))
 
 # Plotting ----------------------------------------------------------------
 #PlotCentroids
+
 plot1<-ggplot()+
   geom_point(data=sites, aes(CCA1, CCA2, color=PatchType, shape=CanopyStatus), size=3)+
   scale_color_manual(values=colors)+
@@ -93,6 +99,7 @@ plot1
 #Save to figures folder
 fileName = paste(figures, 'CCA_ExplanatoryCentroidswithSigArrows.png',sep = '/')
 ggsave(fileName, plot1, dpi = 800,width= 18, height=12, units=c('cm'))
+
 
 #element data
 colors<-c("Live"="coral", "Sterile"="black")

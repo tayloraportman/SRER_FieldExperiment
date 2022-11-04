@@ -59,9 +59,11 @@ pc1 <- paste0('PC1 (', round(var_explained[1]*100, digits = 2), '%)')
 pc2 <- paste0('PC2 (', round(var_explained[2]*100, digits = 2), '%)')
 
 
-shapes<-c("Mesquite"=19, "Open"=1)
-colors<-c("Invasive"="goldenrod2", "Native"="dodgerblue")
+shapes<-c("Mesquite"=19, "Open"=1,  "Sterile"=19, "Live"= NA)
+colors<-c("Invasive"="goldenrod2", "Native"="dodgerblue","Sterile"="black", "Live"="white")
 
+pca_sterile<-pca_coordinates%>%
+  filter(SoilType=="Sterile")
 # Plot Individuals PCA
 pca_plot <- ggplot(pca_coordinates,
                    aes(x = PC1,
@@ -79,8 +81,9 @@ pca_plot <- ggplot(pca_coordinates,
   geom_point(aes(color = PatchType,
                  shape = CanopyStatus),
              size = 3) +
-  scale_shape_manual(values=c(19,1))+
+  scale_shape_manual(values=shapes)+
   scale_color_manual(values=colors)+
+  geom_point(data=pca_sterile, aes(color=SoilType, shape=SoilType),size=1)+
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))+
   labs(title = 'PCA plot: Soil Chemistry',
        x = pc1,
@@ -88,7 +91,7 @@ pca_plot <- ggplot(pca_coordinates,
 pca_plot
 
 #Save to figures folder
-fileName = paste(figures, 'PCA_withSigArrows.png',sep = '/')
+fileName = paste(figures, 'PCA_withSigArrows_All.png',sep = '/')
 ggsave(fileName, pca_plot, dpi = 800,width= 18, height=12, units=c('cm'))
 
 # PCA: SoilType ---------------------------------------------------------------------
@@ -129,8 +132,9 @@ ggsave(fileName, pca_plot2, dpi = 800,width= 18, height=12, units=c('cm'))
 
 # NMDS --------------------------------------------------------------------
 nmds.matrix <- matrix.norm
-dm.method <- 'bray'
+dm.method <- 'eucl'
 # distance matrix by Bray 
+
 dm <- vegdist(nmds.matrix, method=dm.method)
 nmds <- metaMDS(dm,
                 k = 2,
@@ -145,7 +149,16 @@ nmds.scores <- left_join(nmds.scores, metadata, by = 'SampleID')
 
 colors<-c("Invasive"="goldenrod2", "Native"="dodgerblue", "Open"="black", "Mesquite"="darkolivegreen4")
 
-#Plot NMDS
+# Permanova ---------------------------------------------------------------
+rownames(metadata) <- metadata$SampleID
+set.seed(456)
+permanova <- adonis2(dm ~ SoilType+PatchType+CanopyStatus, 
+                    data= metadata, 
+                    permutations=999, 
+                    method="eucl")
+permanova
+
+# Plot NMDS ---------------------------------------------------------------
 nmds_plot <- ggplot(nmds.scores,
                     aes(x = NMDS1,
                         y = NMDS2,

@@ -25,7 +25,6 @@ norm.matrix<-read.csv("data_clean/MonsoonSoilChem_NormalizedMatrix.csv", row.nam
 #Figure save file path
 figures= 'MonsoonSoilChemistry/figures'
 
-
 # Modeling live vs sterile ------------------------------------------------
 norm.matrix<-rownames_to_column(norm.matrix,"SampleID")
 metadata<-metadata%>%
@@ -36,8 +35,9 @@ chem<- norm.matrix%>%
                values_to = 'values')%>%
   left_join(metadata, by="SampleID")
 
-mad1<-lm(values~AnalysisType+ CanopyStatus+ SoilType+ SoilType*AnalysisType+ CanopyStatus*AnalysisType, data=chem)
+mad1<-lmer(values~CanopyStatus+ SoilType+ PatchType+ (1|MesquiteNum), data=chem)
 
+anova(mad1)
 anova(mad1)
 fileName = paste(figures, 'TabModel_ChemistryAnalysisType.doc',sep = '/')
 tab_model(mad1, file=fileName)
@@ -53,7 +53,7 @@ chem<- norm.matrix.live%>%
                values_to = 'values')%>%
   left_join(metadata, by="SampleID")
   
-mad1<-lm(values~AnalysisType+ CanopyStatus+ PatchType+ CanopyStatus*AnalysisType, data=chem)
+mad1<-lm(values~AnalysisType+ CanopyStatus+ PatchType, data=chem)
 
 anova(mad1)
 fileName = paste(figures, 'TabModel_ChemistryAnalysisLIVE.doc',sep = '/')
